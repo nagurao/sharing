@@ -1,0 +1,68 @@
+Create a User Interface with the following Input Fields
+
+1) cc_num
+2) tran_amt
+3) date (try to auto-populate it with current date if not provided)
+4) time (try to auto-populate it with current time if not provided)
+5)tran_category, if not populated set it to "misc_net"
+
+Post user input the following needs to be populated into a DataFrame for model to be predicted
+
+1) Read the "customer_profile.pkl" to get customer details based on cc_num
+	- If cc_num not found, then create a new entry in customer_profile.pkl as follows with randoly generating M or F for Gender, Age a Random integer betwenn 20 - 50, city any randon one, state any random one.
+
+2) Create a place holder to apply the Column Transformations
+
+3) Pass it to predict
+
+4) Update accumulation.pkl file with the details (more detaisl to be shared)
+
++++Sample Code+++
+import pandas as pd
+import os
+
+# Define the pickle file path
+pickle_file_path = 'data.pickle'
+
+# Check if the pickle file exists
+if os.path.exists(pickle_file_path):
+    # Load the DataFrame from the pickle file
+    df = pd.read_pickle(pickle_file_path)
+else:
+    # Create a new DataFrame if the pickle file doesn't exist
+    data = {'cc_num': [1234, 5678, 9012],
+            'trans_date': ['2023-09-01', '2023-09-02', '2023-09-03'],
+            'daily_limit': [1000, 1500, 2000],
+            'remaining_limit': [800, 1400, 1900],
+            'times_used':[1,2,1]}
+    df = pd.DataFrame(data)
+
+# User input
+cc_number = 5678  # Replace with user input
+transaction_date = '2023-09-03'  # Replace with user input
+amount = 200  # Replace with user input
+
+# Check if the combination of cc_num and trans_date already exists in the DataFrame
+mask = (df['cc_num'] == cc_number) & (df['trans_date'] == transaction_date)
+
+if mask.any():
+    # Update the remaining_limit for the existing record
+    df.loc[mask, 'remaining_limit'] -= amount
+    df.loc[mask, 'times_used'] += 1
+else:
+    # Insert a new row for the transaction
+    daily_limit = df.loc[df['cc_num'] == cc_number, 'daily_limit'].iloc[0]
+    remaining_limit = daily_limit - amount
+    new_record = {'cc_num': cc_number,
+                  'trans_date': transaction_date,
+                  'daily_limit': daily_limit,
+                  'remaining_limit': remaining_limit,
+                  'times_used': 1}
+    new_df = pd.DataFrame([new_record])
+    df = pd.concat([df, new_df], ignore_index=True)
+
+# Save the updated DataFrame to the pickle file
+df.to_pickle(pickle_file_path)
+
+# Display the updated DataFrame
+print(df)
